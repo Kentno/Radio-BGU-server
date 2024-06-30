@@ -2,7 +2,7 @@ import heapq
 import threading
 from datetime import datetime, timedelta
 from dataclasses import dataclass
-from utils.utils import compare_by_time
+from utils import compare_by_time
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin.messaging import Message, Notification, send

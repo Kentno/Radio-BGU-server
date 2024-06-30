@@ -1,9 +1,9 @@
 import flask
 from flask import Blueprint, jsonify, request
 #from app_server import azuracast_data_manager,utils
-from managers.azuracast_data_manager import *
+from azuracast_data_manager import *
 import __main__
-streamers_bp = Blueprint('', __name__)
+streamers_bp = Blueprint('radio', __name__)
 
 
 @streamers_bp.route("/broadcasters", methods=['GET'])

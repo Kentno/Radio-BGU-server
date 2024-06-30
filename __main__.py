@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
 # from app_serverd.routes.broadcasters import streamers_bp
-from routes.broadcasters import streamers_bp
-from managers.azuracast_data_manager import AzuracastDataManager
-from managers.firebase_notification_manager import FirebaseNotificationManager
+from broadcasters import streamers_bp
+from azuracast_data_manager import AzuracastDataManager
+from firebase_notification_manager import FirebaseNotificationManager
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)

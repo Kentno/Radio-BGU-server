@@ -7,7 +7,7 @@ from firebase_admin import credentials
 import dotenv
 import os
 from requests import request, get
-from utils.utils import *
+from utils import *
 from dotenv import load_dotenv
 load_dotenv()
 
