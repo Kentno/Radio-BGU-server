@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 #from app_server import azuracast_data_manager,utils
 from azuracast_data_manager import *
 import __main__
+
 streamers_bp = Blueprint('radio', __name__)
 
 
@@ -28,5 +29,10 @@ def sendFirebase():
     :return: a list of all active broadcasters for user topics(broadcasters) list
     """
     topic = request.args.get("topic")
-    __main__.firebase._send_notification(topic,"test","test")
+    __main__.firebase._send_notification(topic, "test", "test")
     return jsonify(200)
+
+
+@streamers_bp.route("/podcastList", methods=['GET'])
+def getPodcastData():
+    return __main__.rss_feeds

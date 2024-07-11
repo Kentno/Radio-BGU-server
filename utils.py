@@ -1,6 +1,10 @@
 import json
 import time
 import datetime
+from xml.etree import ElementTree as ET
+
+import requests
+
 import __main__
 from dataclasses import dataclass
 
@@ -106,3 +110,64 @@ def extract_time(res):
 
 def compare_by_time(x, y):
     return x.time < y.time  # Return True if x.time is earlier than y.time
+
+def load_rss_feed(url:str):
+
+    """
+    Parses an RSS feed at the given URL and returns a dictionary
+    containing episode dates.
+    """
+    # Fetch the XML data
+    response = requests.get(url)
+    response.raise_for_status()  # Raise exception for non-200 status codes
+
+    # Parse the XML content
+    root = ET.fromstring(response.content)
+    ns = {"itunes": 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+
+    # Define podcast dict
+    podcast = {}
+    podcast_req_fields = ["title", "description", "link", "itunes:image"]
+    # Extract episode dates
+    channel_element = root.find('channel')
+    if channel_element is not None:
+        for child in channel_element:
+            if child.tag not in podcast_req_fields:
+                continue
+            if child.tag == "link":
+                podcast["hostURL"] = child.text
+            else:
+                podcast[child.tag] = child.text  # Convert tag to lowercase, get text content
+
+        podcast['image'] = channel_element.find('image').find('url').text
+        # Process items into separate dictionaries
+        episodes = []
+        episodes_req_fields = ["title", "description", "pubDate", "enclosure"]
+        for item in channel_element.findall('item'):
+            episode = {}
+
+            for child in item:
+                if child.tag not in episodes_req_fields and not str(child.tag).__contains__("image"):
+                    continue
+                if str(child.tag).__contains__("image"):
+                    episode["image"] = child.get("href")
+                elif child.tag == "enclosure":
+                    episode['url'] = child.get('url')
+                    episode['duration'] = child.get('length')
+                else:
+                    episode[child.tag] = child.text  # Convert tag to lowercase, get text content
+
+            episodes.append(episode)
+        podcast['episodeList'] = episodes  # Rename 'item' and store episode dictionaries
+
+    return podcast
+
+def read_rss_links(path:str):
+  """
+  Reads a list of RSS feed URLs from the given text file.
+  """
+  links = []
+  with open(path, 'r') as f:
+    for line in f:
+      links.append(line.strip())  # Remove leading/trailing whitespace
+  return links
