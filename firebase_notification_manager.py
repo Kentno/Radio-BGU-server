@@ -11,50 +11,50 @@ from firebase_admin.exceptions import FirebaseError
 
 class FirebaseNotificationManager:
 
-
     def __init__(self):
         self.MINIMUM_NOTIFICATION_DELAY = timedelta(hours=1)
-        self.last_notification = {}
+        self.last_notification = datetime.now() - timedelta(hours=2)
         self.heap = []
         self.cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(self.cred)
 
-    def send_notification(self, topic):
-        threading.Thread(target=self._send_notification, args=(topic,)).start()
+    def send_notification(self, broadcast):
+        threading.Thread(target=self._send_notification, args=(broadcast, broadcast[0], broadcast[1],)).start()
 
-    def _send_notification(self, topic, title="watafaq", body="watafaq"):
-        print(topic)
-        topic = topic.replace(" ","_")
+    def _send_notification(self, broadcast, title="default", body="default"):
+        print(broadcast)
+        broadcast = [x.replace(" ", "_") for x in broadcast if type(x) is str]
         now = datetime.now()
         prev = None
         try:
-            if self._check_last_topic_notification(topic):
-                if topic in self.last_notification:
-                    prev = self.last_notification[topic]
-                self.last_notification[topic] = now
+            if self._check_last_broadcast_notification(broadcast):
+                prev, self.last_notification = self.last_notification, now
                 send(Message(
                     notification=Notification(title=title, body=body),
-                    topic=topic
+                    topic="live"
                 ))
                 print("hi i send notifications")
         except (ValueError, FirebaseError) as e:
-            self.last_notification[topic] = prev
+            self.last_notification = prev
             if prev is None:
-                del self.last_notification[topic]
+                self.last_notification = datetime.now() - timedelta(hours=1)
             print(f"Notification failed with error:\n{e}")
 
-    def _check_last_topic_notification(self, topic):
-        print(self.last_notification)
-        if topic not in self.last_notification:
-            print("check line 1")
-            return True
-        elif datetime.now() - self.last_notification[topic] > self.MINIMUM_NOTIFICATION_DELAY:
-            print("check line 2")
+    def _check_last_broadcast_notification(self, broadcast):
+        if datetime.now() > self.last_notification + self.MINIMUM_NOTIFICATION_DELAY:
             return True
         else:
-            print("check line 3")
             return False
+        # print(self.last_notification)
+        # if broadcast not in self.last_notification:
+        #     print("check line 1")
+        #     return True
+        # elif datetime.now() - self.last_notification[broadcast] > self.MINIMUM_NOTIFICATION_DELAY:
+        #     print("check line 2")
+        #     return True
+        # else:
+        #     print("check line 3")
+        #     return False
 
-    def add_item_to_schedule(self,data):
+    def add_item_to_schedule(self, data):
         pass
-

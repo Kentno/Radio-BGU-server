@@ -1,11 +1,10 @@
 import json
 import time
-import datetime
+from datetime import datetime, timedelta
 from xml.etree import ElementTree as ET
 
 import requests
 
-import __main__
 from dataclasses import dataclass
 
 
@@ -34,33 +33,32 @@ def extract_broadcasters(data):
     return broadcasters
 
 
-def extract_upcoming(data,init=False):
+def extract_upcoming(data, firebase_obj, init=False):
     #TODO fix edge cases
     """
     return the 3 soonest broadcasts
     """
     upcomings = []
-    unix_now = time.mktime(datetime.datetime.now().timetuple())
+    now = datetime.now()
+    unix_now = now.timestamp()
+    print("extracting upcoming broadcasts " + str(init))
     for streamer in data:
+        print(streamer)
         if len(streamer["schedule_items"]) == 0:
             continue
         streamer_name = streamer["display_name"]
         subject = streamer["comments"]
         for item in streamer["schedule_items"]:
-            date = item["start_date"].split("-")
-            if len(str(item["start_time"])) < 4:
-                newtime = ("0"*(4-len(str(item["start_time"]))))+str(item["start_time"])
-            else:
-                newtime = str(item["start_time"])
-            timeArr = [newtime[i:i + 2] for i in range(0, len(newtime), 2)]
-            times = datetime.datetime(int(date[0]),int(date[1]),int(date[2]), int(timeArr[0]),int(timeArr[1]))
-            times = time.mktime(times.timetuple())
-            # time = {"start": item["start_time"], "date": item["start_date"]}
-            if times > unix_now:
-                upcomings.append([streamer_name, subject, times])
+            item_datetime = datetime.strptime(item["start_date"], "%Y-%m-%d")
+            time_str = str(item["start_time"])
+            time_str = "0" + time_str if len(time_str) == 3 else time_str
+            item_datetime = item_datetime.replace(hour=int(time_str[0:2]),minute=int(time_str[2:]))
+            print(item_datetime.timestamp())
+            if item_datetime > now:
+                upcomings.append([streamer_name, subject, item_datetime.timestamp()])
     sorted_upcoming = sorted(upcomings,key=lambda x:(x[2]))[:3]
-    if not init and sorted_upcoming and sorted_upcoming[0][2] - unix_now < 10 * 60:
-        __main__.firebase.send_notification(sorted_upcoming[0][0])
+    if not init and sorted_upcoming and sorted_upcoming[0][2] - unix_now < 10 * 60 and sorted_upcoming[0][2] - unix_now > 5 * 60:
+        firebase_obj.send_notification(sorted_upcoming[0])
     return sorted_upcoming
 
 

@@ -12,15 +12,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class AzuracastDataManager:
-    def __init__(self):
+    def __init__(self,firebase_obj):
+        self.firebase_obj = firebase_obj
         self._now_playing_url = "https://bguradio.co/api/nowplaying"
         self._apikey = os.environ.get('apiKey')
-        print(self._apikey)
         self._broadcasters_url = "https://bguradio.co/api/station/1/streamers"  # Replace with your station URL
 
         self._data = self._get_data_from_azuracast()
         self._broadcasters = extract_broadcasters(self._data)
-        self._upcoming = extract_upcoming(self._data, init=True)
+        self._upcoming = extract_upcoming(self._data,self.firebase_obj, init=True)
 
         self._running = True
         self._thread = threading.Thread(target=self._work_thread)
@@ -43,10 +43,10 @@ class AzuracastDataManager:
 
     def _work_thread(self):
         while self._running:
-            time.sleep(60*5)
             self._data = self._get_data_from_azuracast()
             self._broadcasters = extract_broadcasters(self._data)
-            self._upcoming = extract_upcoming(self._data)
+            self._upcoming = extract_upcoming(self._data,self.firebase_obj)
+            time.sleep(60*5)
 
     def get_broadcasters(self):
         return self._broadcasters
