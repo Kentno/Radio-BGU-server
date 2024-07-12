@@ -147,13 +147,14 @@ def load_rss_feed(url:str):
             episode = {}
 
             for child in item:
-                if child.tag not in episodes_req_fields and not str(child.tag).__contains__("image"):
+                if child.tag not in episodes_req_fields and not str(child.tag).__contains__("image") and not str(child.tag).__contains__("duration"):
                     continue
                 if str(child.tag).__contains__("image"):
                     episode["image"] = child.get("href")
+                if str(child.tag).__contains__("duration"):
+                    episode['duration'] = child.text
                 elif child.tag == "enclosure":
                     episode['url'] = child.get('url')
-                    episode['duration'] = child.get('length')
                 else:
                     episode[child.tag] = child.text  # Convert tag to lowercase, get text content
 
