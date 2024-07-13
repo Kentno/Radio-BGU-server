@@ -8,7 +8,6 @@ import requests
 from dataclasses import dataclass
 
 
-
 @dataclass
 class NotificationData:
     time: datetime
@@ -52,12 +51,13 @@ def extract_upcoming(data, firebase_obj, init=False):
             item_datetime = datetime.strptime(item["start_date"], "%Y-%m-%d")
             time_str = str(item["start_time"])
             time_str = "0" + time_str if len(time_str) == 3 else time_str
-            item_datetime = item_datetime.replace(hour=int(time_str[0:2]),minute=int(time_str[2:]))
+            item_datetime = item_datetime.replace(hour=int(time_str[0:2]), minute=int(time_str[2:]))
             print(item_datetime.timestamp())
             if item_datetime > now:
                 upcomings.append([streamer_name, subject, item_datetime.timestamp()])
-    sorted_upcoming = sorted(upcomings,key=lambda x:(x[2]))[:3]
-    if not init and sorted_upcoming and sorted_upcoming[0][2] - unix_now < 10 * 60 and sorted_upcoming[0][2] - unix_now > 5 * 60:
+    sorted_upcoming = sorted(upcomings, key=lambda x: (x[2]))[:3]
+    if not init and sorted_upcoming and sorted_upcoming[0][2] - unix_now < 10 * 60 and sorted_upcoming[0][
+        2] - unix_now > 5 * 60:
         firebase_obj.send_notification(sorted_upcoming[0])
     return sorted_upcoming
 
@@ -109,8 +109,8 @@ def extract_time(res):
 def compare_by_time(x, y):
     return x.time < y.time  # Return True if x.time is earlier than y.time
 
-def load_rss_feed(url:str):
 
+def load_rss_feed(url: str):
     """
     Parses an RSS feed at the given URL and returns a dictionary
     containing episode dates.
@@ -145,7 +145,8 @@ def load_rss_feed(url:str):
             episode = {}
 
             for child in item:
-                if child.tag not in episodes_req_fields and not str(child.tag).__contains__("image") and not str(child.tag).__contains__("duration"):
+                if child.tag not in episodes_req_fields and not str(child.tag).__contains__("image") and not str(
+                        child.tag).__contains__("duration"):
                     continue
                 if str(child.tag).__contains__("image"):
                     episode["image"] = child.get("href")
@@ -161,12 +162,13 @@ def load_rss_feed(url:str):
 
     return podcast
 
-def read_rss_links(path:str):
-  """
+
+def read_rss_links(path: str):
+    """
   Reads a list of RSS feed URLs from the given text file.
   """
-  links = []
-  with open(path, 'r') as f:
-    for line in f:
-      links.append(line.strip())  # Remove leading/trailing whitespace
-  return links
+    links = []
+    with open(path, 'r') as f:
+        for line in f:
+            links.append(line.strip())  # Remove leading/trailing whitespace
+    return list(set(links))
