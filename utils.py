@@ -7,6 +7,8 @@ import requests
 
 from dataclasses import dataclass
 
+from bs4 import BeautifulSoup
+
 
 @dataclass
 class NotificationData:
@@ -155,7 +157,7 @@ def load_rss_feed(url: str):
                 elif child.tag == "enclosure":
                     episode['url'] = child.get('url')
                 else:
-                    episode[child.tag] = child.text  # Convert tag to lowercase, get text content
+                    episode[child.tag] = html_to_string(child.text) if child.text else ""  # Convert tag to lowercase, get text content
 
             episodes.append(episode)
         podcast['episodeList'] = episodes  # Rename 'item' and store episode dictionaries
@@ -165,10 +167,25 @@ def load_rss_feed(url: str):
 
 def read_rss_links(path: str):
     """
-  Reads a list of RSS feed URLs from the given text file.
-  """
+    Reads a list of RSS feed URLs from the given text file.
+    """
     links = []
     with open(path, 'r') as f:
         for line in f:
             links.append(line.strip())  # Remove leading/trailing whitespace
     return list(set(links))
+
+
+def html_to_string(html_text):
+    """
+    Extracts text content from a string containing HTML tags.
+
+    Args:
+      html_text: String containing HTML content.
+
+    Returns:
+      String containing only the text content from the HTML.
+    """
+    return BeautifulSoup(html_text, "html.parser").get_text()
+
+
