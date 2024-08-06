@@ -156,8 +156,9 @@ def load_rss_feed(url: str):
             if child.tag == "link":
                 podcast["hostURL"] = child.text
             elif child.tag in ["title", "description"]:
-                podcast[child.tag] = child.text
-                podcast[str(child.tag)+"_direction"] = guesstextorientation(child.text)
+                text = html_to_string(child.text)
+                podcast[child.tag] = text
+                podcast[str(child.tag)+"_direction"] = guesstextorientation(text)
             else:
                 podcast[child.tag] = child.text  # Convert tag to lowercase, get text content
 
@@ -179,8 +180,9 @@ def load_rss_feed(url: str):
                 elif child.tag == "enclosure":
                     episode['url'] = child.get('url')
                 elif child.tag in ["title", "description"]:
-                    episode[child.tag] = child.text
-                    episode[str(child.tag) + "_direction"] = guesstextorientation(child.text)
+                    text = html_to_string(child.text)
+                    episode[child.tag] = text
+                    episode[str(child.tag) + "_direction"] = guesstextorientation(text)
                 else:
                     episode[child.tag] = html_to_string(child.text) if child.text else ""  # Convert tag to lowercase, get text content
 
