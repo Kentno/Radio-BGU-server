@@ -9,6 +9,25 @@ from dataclasses import dataclass
 
 from bs4 import BeautifulSoup
 
+import re
+
+# Define character ranges for Arabic and Hebrew
+arabic_pattern = re.compile('[\u0627-\u064a]')
+hebrew_pattern = re.compile('[\u0590-\u05FF]')
+
+
+def guesstextorientation(text):
+    # Count occurrences of Arabic and Hebrew characters
+    arabic_count = len(re.findall(arabic_pattern, text))
+    hebrew_count = len(re.findall(hebrew_pattern, text))
+
+    # Determine text orientation based on character counts
+    if arabic_count > (len(text) / 2):
+        return 'rtl'  # Right-to-left for Arabic
+    elif hebrew_count > (len(text) / 2):
+        return 'rtl'  # Right-to-left for Hebrew
+    else:
+        return 'ltr'  # Left-to-right for English or other languages
 
 @dataclass
 class NotificationData:
@@ -136,6 +155,9 @@ def load_rss_feed(url: str):
                 continue
             if child.tag == "link":
                 podcast["hostURL"] = child.text
+            elif child.tag in ["title", "description"]:
+                podcast[child.tag] = child.text
+                podcast[str(child.tag)+"_direction"] = guesstextorientation(child.text)
             else:
                 podcast[child.tag] = child.text  # Convert tag to lowercase, get text content
 
@@ -156,6 +178,9 @@ def load_rss_feed(url: str):
                     episode['duration'] = child.text
                 elif child.tag == "enclosure":
                     episode['url'] = child.get('url')
+                elif child.tag in ["title", "description"]:
+                    episode[child.tag] = child.text
+                    episode[str(child.tag) + "_direction"] = guesstextorientation(child.text)
                 else:
                     episode[child.tag] = html_to_string(child.text) if child.text else ""  # Convert tag to lowercase, get text content
 
