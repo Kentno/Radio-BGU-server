@@ -38,13 +38,13 @@ def getPodcastData():
 
 
 if __name__ == "__main__":
+    config = configparser.ConfigParser()
+    config.read('config.ini')
 
-    firebase = FirebaseNotificationManager()
+    firebase = FirebaseNotificationManager(config['ServerSettings'].get('squash_minutes'))
     azuracastDataManager = AzuracastDataManager(firebase)
     # app.register_blueprint(streamers_bp)
     podcast_data = []
-    config = configparser.ConfigParser()
-    config.read('config.ini')
     rss_links_path = config['RSS'].get('path')
     urls = read_rss_links(rss_links_path)
     rss_feeds = [load_rss_feed(url) for url in urls]

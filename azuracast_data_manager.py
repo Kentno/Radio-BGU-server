@@ -39,14 +39,13 @@ class AzuracastDataManager:
         if response.status_code == 200:
             return json.loads(response.content)
         else:
-            print(f"Error: {response.status_code}")
-
+            pass
     def _work_thread(self):
         while self._running:
             self._data = self._get_data_from_azuracast()
             self._broadcasters = extract_broadcasters(self._data)
             self._upcoming = extract_upcoming(self._data,self.firebase_obj)
-            time.sleep(60*5)
+            time.sleep(30)
 
     def get_broadcasters(self):
         return self._broadcasters

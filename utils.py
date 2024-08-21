@@ -60,10 +60,8 @@ def extract_upcoming(data, firebase_obj, init=False):
     """
     upcomings = []
     now = datetime.now()
-    unix_now = now.timestamp()
-    print("extracting upcoming broadcasts " + str(init))
+    unix_now = int(now.timestamp()) + 3 * 60 * 60
     for streamer in data:
-        print(streamer)
         if len(streamer["schedule_items"]) == 0:
             continue
         streamer_name = streamer["display_name"]
@@ -73,12 +71,11 @@ def extract_upcoming(data, firebase_obj, init=False):
             time_str = str(item["start_time"])
             time_str = "0" + time_str if len(time_str) == 3 else time_str
             item_datetime = item_datetime.replace(hour=int(time_str[0:2]), minute=int(time_str[2:]))
-            print(item_datetime.timestamp())
             if item_datetime > now:
                 upcomings.append([streamer_name, subject, item_datetime.timestamp()])
     sorted_upcoming = sorted(upcomings, key=lambda x: (x[2]))[:3]
-    if not init and sorted_upcoming and sorted_upcoming[0][2] - unix_now < 10 * 60 and sorted_upcoming[0][
-        2] - unix_now > 5 * 60:
+    if not init and sorted_upcoming and int(sorted_upcoming[0][2]) - int(unix_now) < 10 * 60 and int(sorted_upcoming[0][
+        2]) - int(unix_now) > 5 * 60:
         firebase_obj.send_notification(sorted_upcoming[0])
     return sorted_upcoming
 

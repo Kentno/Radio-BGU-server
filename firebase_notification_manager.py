@@ -11,8 +11,8 @@ from firebase_admin.exceptions import FirebaseError
 
 class FirebaseNotificationManager:
 
-    def __init__(self):
-        self.MINIMUM_NOTIFICATION_DELAY = timedelta(hours=1)
+    def __init__(self,squash=120):
+        self.MINIMUM_NOTIFICATION_DELAY = timedelta(minutes=int(squash))
         self.last_notification = datetime.now() - timedelta(hours=2)
         self.heap = []
         self.cred = credentials.Certificate("serviceAccountKey.json")
@@ -22,7 +22,7 @@ class FirebaseNotificationManager:
         threading.Thread(target=self._send_notification, args=(broadcast, broadcast[0], broadcast[1],)).start()
 
     def _send_notification(self, broadcast, title="default", body="default"):
-        print(broadcast)
+        print("Sending Push Notification:\n", broadcast)
         broadcast = [x.replace(" ", "_") for x in broadcast if type(x) is str]
         now = datetime.now()
         prev = None
