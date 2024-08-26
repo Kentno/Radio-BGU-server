@@ -1,15 +1,10 @@
-import json
-import time
-from datetime import datetime, timedelta
-from xml.etree import ElementTree as ET
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from xml.etree import ElementTree as eT
 
 import requests
-
-from dataclasses import dataclass
-
 from bs4 import BeautifulSoup
-
-import re
 
 # Define character ranges for Arabic and Hebrew
 arabic_pattern = re.compile('[\u0627-\u064a]')
@@ -28,6 +23,7 @@ def guesstextorientation(text):
         return 'rtl'  # Right-to-left for Hebrew
     else:
         return 'ltr'  # Left-to-right for English or other languages
+
 
 @dataclass
 class NotificationData:
@@ -54,7 +50,6 @@ def extract_broadcasters(data):
 
 
 def extract_upcoming(data, firebase_obj, init=False):
-    #TODO fix edge cases
     """
     return the 3 soonest broadcasts
     """
@@ -74,58 +69,9 @@ def extract_upcoming(data, firebase_obj, init=False):
             if item_datetime > now:
                 upcomings.append([streamer_name, subject, item_datetime.timestamp()])
     sorted_upcoming = sorted(upcomings, key=lambda x: (x[2]))[:3]
-    if not init and sorted_upcoming and int(sorted_upcoming[0][2]) - int(unix_now) < 10 * 60 and int(sorted_upcoming[0][
-        2]) - int(unix_now) > 5 * 60:
+    if not init and sorted_upcoming and 10 * 60 > int(sorted_upcoming[0][2]) - int(unix_now) > 5 * 60:
         firebase_obj.send_notification(sorted_upcoming[0])
     return sorted_upcoming
-
-
-def extract_song_name(res):
-    """
-    Extracts the song name (artist - title) from the API response data.
-    Args:
-        res (object): The response data from the API call.
-    Returns:
-        str: Formatted string representing the song name (artist - title).
-    """
-    return json.loads(res.text)[0]["now_playing"]["song"]["text"]
-
-
-def extrat_song_title(res):
-    """
-    Extracts the song title from the API response data.
-    Args:
-        res (object): The response data from the API call.
-    Returns:
-        str: Formatted string representing the song title.
-    """
-    return json.loads(res.text)[0]["now_playing"]["song"]["title"]
-
-
-def extract_live_status(res):
-    """
-    Extracts the live status (True/False) from the API response data.
-    Args:
-        res (object): The response data from the API call.
-    Returns:
-        bool: True if live, False otherwise.
-    """
-    return json.loads(res.text)[0]["live"]["is_live"]
-
-
-def extract_time(res):
-    """
-    Extracts the current time the song was played and converts it to datetime.
-    Args:
-        res (object): The response data from the API call.
-    Returns:
-        datetime.datetime: Object representing the time the song was played.
-    """
-    return datetime.datetime.fromtimestamp(json.loads(res.text)[0]["now_playing"]["played_at"])
-
-
-def compare_by_time(x, y):
-    return x.time < y.time  # Return True if x.time is earlier than y.time
 
 
 def load_rss_feed(url: str):
@@ -138,8 +84,7 @@ def load_rss_feed(url: str):
     response.raise_for_status()  # Raise exception for non-200 status codes
 
     # Parse the XML content
-    root = ET.fromstring(response.content)
-    ns = {"itunes": 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+    root = eT.fromstring(response.content)
 
     # Define podcast dict
     podcast = {}
@@ -155,7 +100,7 @@ def load_rss_feed(url: str):
             elif child.tag in ["title", "description"]:
                 text = html_to_string(child.text)
                 podcast[child.tag] = text
-                podcast[str(child.tag)+"_direction"] = guesstextorientation(text)
+                podcast[str(child.tag) + "_direction"] = guesstextorientation(text)
             else:
                 podcast[child.tag] = child.text  # Convert tag to lowercase, get text content
 
@@ -181,7 +126,8 @@ def load_rss_feed(url: str):
                     episode[child.tag] = text
                     episode[str(child.tag) + "_direction"] = guesstextorientation(text)
                 else:
-                    episode[child.tag] = html_to_string(child.text) if child.text else ""  # Convert tag to lowercase, get text content
+                    episode[child.tag] = html_to_string(
+                        child.text) if child.text else ""  # Convert tag to lowercase, get text content
 
             episodes.append(episode)
         podcast['episodeList'] = episodes  # Rename 'item' and store episode dictionaries
@@ -211,5 +157,3 @@ def html_to_string(html_text):
       String containing only the text content from the HTML.
     """
     return BeautifulSoup(html_text, "html.parser").get_text()
-
-

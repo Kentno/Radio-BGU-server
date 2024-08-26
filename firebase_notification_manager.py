@@ -1,17 +1,15 @@
-import heapq
 import threading
 from datetime import datetime, timedelta
-from dataclasses import dataclass
-from utils import compare_by_time
+
 import firebase_admin
 from firebase_admin import credentials
-from firebase_admin.messaging import Message, Notification, send
 from firebase_admin.exceptions import FirebaseError
+from firebase_admin.messaging import Message, Notification, send
 
 
 class FirebaseNotificationManager:
 
-    def __init__(self,squash=120):
+    def __init__(self, squash=120):
         self.MINIMUM_NOTIFICATION_DELAY = timedelta(minutes=int(squash))
         self.last_notification = datetime.now() - timedelta(hours=2)
         self.heap = []
@@ -23,11 +21,10 @@ class FirebaseNotificationManager:
 
     def _send_notification(self, broadcast, title="default", body="default"):
         print("Sending Push Notification:\n", broadcast)
-        broadcast = [x.replace(" ", "_") for x in broadcast if type(x) is str]
         now = datetime.now()
         prev = None
         try:
-            if self._check_last_broadcast_notification(broadcast):
+            if self._check_last_broadcast_notification():
                 prev, self.last_notification = self.last_notification, now
                 send(Message(
                     notification=Notification(title=title, body=body),
@@ -40,21 +37,11 @@ class FirebaseNotificationManager:
                 self.last_notification = datetime.now() - timedelta(hours=1)
             print(f"Notification failed with error:\n{e}")
 
-    def _check_last_broadcast_notification(self, broadcast):
+    def _check_last_broadcast_notification(self):
         if datetime.now() > self.last_notification + self.MINIMUM_NOTIFICATION_DELAY:
             return True
         else:
             return False
-        # print(self.last_notification)
-        # if broadcast not in self.last_notification:
-        #     print("check line 1")
-        #     return True
-        # elif datetime.now() - self.last_notification[broadcast] > self.MINIMUM_NOTIFICATION_DELAY:
-        #     print("check line 2")
-        #     return True
-        # else:
-        #     print("check line 3")
-        #     return False
 
     def add_item_to_schedule(self, data):
         pass

@@ -17,7 +17,7 @@ def home():
 
 
 @app.route("/broadcasters", methods=['GET'])
-def getBroadcasters():
+def get_broadcasters():
     """
     :return: a list of all active broadcasters for user topics(broadcasters) list
     """
@@ -25,7 +25,7 @@ def getBroadcasters():
 
 
 @app.route("/upcomingBroadcasts", methods=['GET'])
-def upcomingBroadcast():
+def upcoming_broadcast():
     """
     :return: Returns the three upcoming broadcasts as an edited string to display on the app news ticker
     """
@@ -33,7 +33,7 @@ def upcomingBroadcast():
 
 
 @app.route("/podcastList", methods=['GET'])
-def getPodcastData():
+def get_podcast_data():
     return rss_feeds
 
 
@@ -48,6 +48,5 @@ if __name__ == "__main__":
     rss_links_path = config['RSS'].get('path')
     urls = read_rss_links(rss_links_path)
     rss_feeds = [load_rss_feed(url) for url in urls]
-
 
     app.run(host='0.0.0.0', port=5001)
